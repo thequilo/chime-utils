@@ -39,9 +39,7 @@ And new CLI commands: <br>
 - `chime-utils dgen` <br>
     - generates and downloads CHiME-8 data.
 - `chime-utils lhotse-prep` <br>
-    - prepares CHiME-8 data lhotse manifests.
-- `chime-utils espnet-prep` <br>
-    - prepares CHiME-8 data ESPNet/Kaldi-style manifests.
+    - prepares CHiME-8 data lhotse manifests (which can be then converted to Kaldi and ESPNet compatible ones).
 - `chime-utils speechbrain-prep` <br>
     - prepares CHiME-8 data Speechbrain-style JSON format.
 - `chime-utils score` <br>
@@ -54,29 +52,13 @@ Hereafter we describe each command/function in detail.
 ### ⚡ All DASR data in one go
 
 You can generate all CHiME-8 DASR data in one go with: <br>
-`chime-utils dgen dasr ./download /path/to/mixer6_root ./chime8_dasr --part train,dev` 
+`chime-utils dgen dasr ./download /path/to/mixer6 ./chime8_dasr --part train,dev` 
 
 This script will download CHiME-6, DiPCo and NOTSOFAR1 automatically in `./download` <br>
 Ensure you have at least 1TB of space there. You can remove the `.tar.gz` after the full data preparation to save some space later.
 
 Mixer 6 Speech instead has to be obtained through LDC. <br>
-Refer to [chimechallenge.org/current/task1/data](https://www.chimechallenge.org/current/task1/data) on how to obtain Mixer 6 Speech. <br>
-The Mixer 6 root folder should look like this: <br>
-
-```
-mixer6_root 
-├── data 
-│   └── pcm_flac 
-├── metadata 
-│   ├── iv_components_final.csv 
-│   ├── mx6_calls.csv 
-...
-├── splits 
-│   ├── dev_a 
-│   ├── dev_a.list 
-...
-└── train_and_dev_files
-```
+Refer to [chimechallenge.org/current/task1/data](https://www.chimechallenge.org/current/task1/data) on how to obtain Mixer 6 Speech.
 
 🔐 You can check if the data has been successfully prepared with: <br>
 `chime-utils dgen checksum ./chime8_dasr` <br>
@@ -84,28 +66,25 @@ It is better to run this also for the evaluation part, when evaluation will be r
 
 ### 🐢 Single Dataset Scripts
 
-
-We provide scripts for obtaining each core dataset independently if needed. <br>
-Command basic usage: `chime-utils dgen <DATASET> <DOWNLOAD_DIR> <OUTPUT_DIR> --download` <br>
-
+We also provide scripts for obtaining each core dataset independently if needed.
 
 - CHiME-6
-   - `chime-utils dgen chime6 ./download/chime6 ./chime8_dasr/chime6 --part train,dev --download` 
-     - If it is already in storage in `/path/to/chime6_root` instead you can use:
-       - `chime-utils dgen chime6 /path/to/chime6_root ./chime8_dasr/chime6 --part train,dev`
+   -  `chime-utils dgen chime6 /path/to/chime6 ./chime8_dasr/chime6 --part train,dev` 
+   - It can also be downloaded automatically to `./download/chime6` using:
+       - `chime-utils dgen chime6 ./download/chime6 ./chime8_dasr/chime6 --part train,dev --download` 
 - DiPCo
-   - `chime-utils dgen dipco ./download/dipco ./chime8_dasr/dipco --part train,dev --download` 
-     - If it is already in storage in `/path/to/dipco` instead you can use:
-       - `chime-utils dgen dipco /path/to/dipco ./chime8_dasr/dipco --part train,dev`
+    -  `chime-utils dgen dipco /path/to/dipco ./chime8_dasr/dipco --part dev` 
+    - It can also be downloaded automatically to `./download/dipco` using:
+      - `chime-utils dgen dipco ./download/dipco ./chime8_dasr/dipco --part dev --download` 
 - Mixer 6 Speech
-    - `chime-utils dgen mixer6 /path/to/mixer6_root ./chime8_dasr/mixer6 --part train_call,train_intv,train,dev`
-      - It must be obtained via LDC ([see CHiME-8 data page](https://www.chimechallenge.org/current/task1/data)) and extracted manually. 
+    - `chime-utils dgen mixer6 /path/to/mixer6 ./chime8_dasr/mixer6 --part train_call,train_intv,dev`
 - NOTSOFAR1
-   - `chime-utils dgen notsofar1 ./download/notsofar1 ./chime8_dasr/notsofar1 --part train,dev --download` 
-     - If it is already in storage in `/path/to/notsofar1` instead you can use:
-       - `chime-utils dgen notsofar1 /path/to/notsofar1 ./chime8_dasr/notsofar1 --part train,dev`
+  - `chime-utils dgen notsofar1 /path/to/notsofar1 ./chime8_dasr/notsofar1 --part dev`
+  - It can also be downloaded automatically to `./download/notsofar1` using:
+      - `chime-utils dgen notsofar1 ./download/notsofar1 ./chime8_dasr/notsofar1 --part dev --download` 
  
 ## Data preparation
+
 
 ### 🚀 NVIDIA NeMo Official Baseline 
  
@@ -264,13 +243,14 @@ so that systems output can be more in-depth analyzed.
 
 #### 🔍 MeetEval meeting recognition visualization (recommended)
 
-For ASR+diarization error analysis we recommend the use of this super useful Meeteval tool (will be presented at ICASSP 2024 in a show and tell session): <br>
-- https://thequilo.github.io/meeteval_jupyterlite/lab/
+For ASR+diarization error analysis we recommend the use of this super useful [Meeteval](github.com/fgnt/meeteval) tool (will be presented at ICASSP 2024 in a show and tell session): <br>
+- [https://fgnt.github.io/meeteval_jupyterlite/lab](https://fgnt.github.io/meeteval_jupyterlite/lab)
 
-To use this tool all you need is to convert the predictio`.stm`ns and the ground truth to .stm format: 
-
-`chime-utils score segslt2stm /path/to/your_JSON_predictions /path/to/output_folder` <br>
-`chime-utils score segslt2stm /path/to/chime8_dasr_ground_truth_JSON /path/to/output_folder_gt` <br>
+You can upload your predictions and references in any supported file format (SegLST is preferred) to the [JupyterLite notebook running in the browser](https://thequilo.github.io/meeteval_jupyterlite/lab/), run the visualization in a Jupyter notebook locally, or build a visualization in the command-line using
+```
+python -m meeteval.viz -r path/to/reference.json -h path/to/hypothesis.json --example-id "<sessionID>"
+```
+which will generate an HTML file that you can open with any browser.
 
 ---
 
@@ -284,7 +264,7 @@ If you wish to contribute, download this repo:
 
 and then install with:  
 
-`pip install -e .` <br>
+`pip install -e .[dev]` <br>
 `pip install pre-commit` <br>
 `pre-commit install --install-hooks`
 
